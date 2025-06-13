@@ -102,7 +102,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
     return structure;
   }, [participantCount, winCount, loseCount, ladderStructure]);
 
-  const drawLadder = (highlightPath?: { level: number; position: number }[]) => {
+  const drawLadder = useCallback((highlightPath?: { level: number; position: number }[]) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -189,7 +189,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
         ctx.stroke();
       }
     }
-  };
+  }, [participantCount, participants, generateLadderStructure]);
 
   const simulateIndividualLadder = async (participantIndex: number) => {
     if (!ladderStructure) return;
@@ -211,13 +211,13 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
       
       path.push({ level: level + 1, position: currentPosition });
       
-             // 애니메이션으로 경로 그리기
-       await new Promise<void>(resolve => {
-         setTimeout(() => {
-           drawLadder(path);
-           resolve();
-         }, 300);
-       });
+      // 애니메이션으로 경로 그리기
+      await new Promise<void>(resolve => {
+        setTimeout(() => {
+          drawLadder(path);
+          resolve();
+        }, 300);
+      });
     }
     
     const result = structure.outcomes[currentPosition];
@@ -243,7 +243,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
     generateLadderStructure();
     drawLadder();
     
-         await new Promise<void>(resolve => setTimeout(() => resolve(), 500));
+    await new Promise<void>(resolve => setTimeout(() => resolve(), 500));
     await simulateIndividualLadder(participantIndex);
     
     setIsPlaying(false);
@@ -262,7 +262,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
     if (canvasRef.current && !isPlaying) {
       drawLadder();
     }
-  }, [participantCount, participants, winCount, loseCount]);
+  }, [participantCount, participants, winCount, loseCount, drawLadder, isPlaying]);
 
   return (
     <div className={className}>
@@ -360,7 +360,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
           </button>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          {participants.map((participant, index) => (
+          {participants.map((participant) => (
             <div key={participant.id} className="flex items-center gap-2">
               {isEditingNames ? (
                 <input
@@ -409,10 +409,10 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
       <div className="mb-6 space-y-2">
         <h3 className="text-white text-lg font-semibold text-center mb-3">개별 사다리타기</h3>
         <div className="grid grid-cols-2 gap-3">
-          {participants.map((participant, index) => (
+          {participants.map((participant, participantIndex) => (
             <button
               key={participant.id}
-              onClick={() => startIndividualGame(index)}
+              onClick={() => startIndividualGame(participantIndex)}
               disabled={isPlaying || participant.hasPlayed}
               className={`
                 flex items-center justify-center gap-2 p-3 rounded-xl font-medium transition-all duration-200

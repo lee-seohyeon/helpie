@@ -72,7 +72,7 @@ export default function Globe({
   };
 
   useEffect(() => {
-    let globe: any;
+    let globe: ReturnType<typeof createGlobe> | null = null;
     
     if (canvasRef.current) {
       const onResize = () => {
@@ -81,7 +81,7 @@ export default function Globe({
         }
       };
 
-      const onRender = (state: any) => {
+      const onRender = (state: Record<string, any>) => {
         if (!pointerInteracting.current) {
           phiRef.current += 0.005;
         }
