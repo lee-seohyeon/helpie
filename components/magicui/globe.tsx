@@ -81,7 +81,7 @@ export default function Globe({
         }
       };
 
-      const onRender = (state: Record<string, any>) => {
+      const onRender = (state: Record<string, number>) => {
         if (!pointerInteracting.current) {
           phiRef.current += 0.005;
         }
