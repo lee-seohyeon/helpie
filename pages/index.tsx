@@ -16,14 +16,14 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="min-h-screen bg-black overflow-hidden relative flex items-center">
+      <main className="min-h-screen bg-black overflow-hidden relative">
         {/* Background Effects */}
         <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-black to-black" />
         <div className="fixed inset-0 bg-[url('/grid.svg')] bg-repeat [mask-image:radial-gradient(white,transparent_85%)] opacity-20" />
 
-        <div className="relative w-full max-w-2xl mx-auto px-4 py-8 sm:px-6 sm:py-12">
-          {/* Tab Navigation */}
-          <div className="flex justify-center mb-8">
+        {/* Tab Navigation - Fixed at top */}
+        <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10">
+          <div className="flex justify-center py-4">
             <div className="bg-zinc-900/80 backdrop-blur-xl p-1.5 rounded-2xl border border-white/10 shadow-xl">
               <div className="flex gap-2">
                 <button
@@ -55,14 +55,19 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Tab Content */}
-          <div className="relative">
-            <div className={`transition-all duration-300 ${activeTab === 'dice' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 absolute inset-0 pointer-events-none'}`}>
-              <DiceGame />
-            </div>
-            <div className={`transition-all duration-300 ${activeTab === 'numbers' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 absolute inset-0 pointer-events-none'}`}>
-              <NumberPicker />
+        {/* Content Area */}
+        <div className="relative flex items-center justify-center min-h-[calc(100vh-80px)]">
+          <div className="relative w-full max-w-2xl mx-auto px-4 py-8 sm:px-6 sm:py-12">
+            {/* Tab Content */}
+            <div className="relative">
+              <div className={`transition-all duration-300 ${activeTab === 'dice' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 absolute inset-0 pointer-events-none'}`}>
+                <DiceGame />
+              </div>
+              <div className={`transition-all duration-300 ${activeTab === 'numbers' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 absolute inset-0 pointer-events-none'}`}>
+                <NumberPicker />
+              </div>
             </div>
           </div>
         </div>

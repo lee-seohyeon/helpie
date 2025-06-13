@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import Dice from './Dice';
 import { Plus, Minus, RefreshCw } from 'lucide-react';
-import { Meteors } from "@/components/magicui/meteors";
 
 interface DiceGameProps {
   className?: string;
