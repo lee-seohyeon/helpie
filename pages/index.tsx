@@ -2,16 +2,17 @@ import { useState } from 'react';
 import Head from 'next/head';
 import DiceGame from '@/components/DiceGame';
 import NumberPicker from '@/components/NumberPicker';
-import { Dice1, Hash } from 'lucide-react';
+import LadderGame from '@/components/LadderGame';
+import { Dice1, Hash, GitBranch } from 'lucide-react';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'dice' | 'numbers'>('dice');
+  const [activeTab, setActiveTab] = useState<'dice' | 'numbers' | 'ladder'>('dice');
 
   return (
     <>
       <Head>
         <title>Helpie - 유용한 도구 모음</title>
-        <meta name="description" content="주사위 굴리기, 랜덤 숫자 뽑기 등 유용한 도구 모음" />
+        <meta name="description" content="주사위 굴리기, 랜덤 숫자 뽑기, 사다리타기 등 유용한 도구 모음" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -29,7 +30,7 @@ export default function Home() {
                 <button
                   onClick={() => setActiveTab('dice')}
                   className={`
-                    flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200
+                    flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all duration-200
                     ${activeTab === 'dice'
                       ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-black shadow-lg'
                       : 'text-white/70 hover:text-white hover:bg-white/10'
@@ -42,7 +43,7 @@ export default function Home() {
                 <button
                   onClick={() => setActiveTab('numbers')}
                   className={`
-                    flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200
+                    flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all duration-200
                     ${activeTab === 'numbers'
                       ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-black shadow-lg'
                       : 'text-white/70 hover:text-white hover:bg-white/10'
@@ -51,6 +52,19 @@ export default function Home() {
                 >
                   <Hash className="w-5 h-5" />
                   랜덤 숫자
+                </button>
+                <button
+                  onClick={() => setActiveTab('ladder')}
+                  className={`
+                    flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all duration-200
+                    ${activeTab === 'ladder'
+                      ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-black shadow-lg'
+                      : 'text-white/70 hover:text-white hover:bg-white/10'
+                    }
+                  `}
+                >
+                  <GitBranch className="w-5 h-5" />
+                  사다리타기
                 </button>
               </div>
             </div>
@@ -65,8 +79,11 @@ export default function Home() {
               <div className={`transition-all duration-300 ${activeTab === 'dice' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 absolute inset-0 pointer-events-none'}`}>
                 <DiceGame />
               </div>
-              <div className={`transition-all duration-300 ${activeTab === 'numbers' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 absolute inset-0 pointer-events-none'}`}>
+              <div className={`transition-all duration-300 ${activeTab === 'numbers' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 absolute inset-0 pointer-events-none'}`}>
                 <NumberPicker />
+              </div>
+              <div className={`transition-all duration-300 ${activeTab === 'ladder' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 absolute inset-0 pointer-events-none'}`}>
+                <LadderGame />
               </div>
             </div>
           </div>
