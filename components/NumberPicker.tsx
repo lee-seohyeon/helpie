@@ -65,22 +65,22 @@ const NumberPicker: React.FC<NumberPickerProps> = ({ className }) => {
       {/* Number Range Inputs */}
       <div className="mb-6 flex flex-col gap-4">
         <div className="flex items-center justify-between gap-4">
-          <label className="text-white text-sm">최소값:</label>
+          <label className="text-white text-base sm:text-lg font-medium">최소값:</label>
           <input
             type="number"
             value={minNumber}
             onChange={(e) => setMinNumber(Math.min(parseInt(e.target.value) || 1, maxNumber - 1))}
-            className="w-24 px-3 py-2 bg-zinc-900/80 border border-white/10 rounded-lg text-white text-right"
+            className="w-24 px-3 py-2 bg-zinc-900/80 border border-white/10 rounded-lg text-white text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             disabled={isGenerating}
           />
         </div>
         <div className="flex items-center justify-between gap-4">
-          <label className="text-white text-sm">최대값:</label>
+          <label className="text-white text-base sm:text-lg font-medium">최대값:</label>
           <input
             type="number"
             value={maxNumber}
             onChange={(e) => setMaxNumber(Math.max(parseInt(e.target.value) || minNumber + 1, minNumber + 1))}
-            className="w-24 px-3 py-2 bg-zinc-900/80 border border-white/10 rounded-lg text-white text-right"
+            className="w-24 px-3 py-2 bg-zinc-900/80 border border-white/10 rounded-lg text-white text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             disabled={isGenerating}
           />
         </div>

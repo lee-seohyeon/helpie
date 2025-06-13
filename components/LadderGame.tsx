@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Plus, Minus, Play, Users, Gift, X, Edit3, UserCheck, RotateCw } from 'lucide-react';
 
 interface LadderGameProps {
@@ -33,6 +33,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
   const [ladderStructure, setLadderStructure] = useState<LadderStructure | null>(null);
   const [isEditingNames, setIsEditingNames] = useState(false);
   const [animationPath, setAnimationPath] = useState<{ level: number; position: number }[]>([]);
+  const [isClient, setIsClient] = useState(false);
 
   const updateParticipantCount = (newCount: number) => {
     if (newCount >= 2 && newCount <= 10 && !isPlaying) {
@@ -78,9 +79,22 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
     
     // 사다리 구조 생성
     for (let level = 0; level < levels; level++) {
-      ladders[level] = [];
-      for (let i = 0; i < participantCount - 1; i++) {
-        ladders[level][i] = Math.random() > 0.5;
+      ladders[level] = Array(participantCount - 1).fill(false);
+      
+      // 각 레벨에서 하나의 가로선만 생성
+      const possiblePositions = Array.from({ length: participantCount - 1 }, (_, i) => i)
+        .filter(pos => {
+          // 이전 레벨에서 연결된 위치는 제외
+          if (level > 0 && ladders[level - 1][pos]) return false;
+          if (level > 0 && pos > 0 && ladders[level - 1][pos - 1]) return false;
+          return true;
+        });
+
+      if (possiblePositions.length > 0) {
+        // 가능한 위치 중 하나를 랜덤하게 선택
+        const randomIndex = Math.floor(Math.random() * possiblePositions.length);
+        const selectedPosition = possiblePositions[randomIndex];
+        ladders[level][selectedPosition] = true;
       }
     }
 
@@ -111,35 +125,32 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
     let currentPosition = participantIndex;
     const path: { level: number; position: number }[] = [{ level: 0, position: currentPosition }];
     
-    // 각 레벨을 내려가면서 사다리 확인 (정확한 알고리즘)
+    // 각 레벨을 내려가면서 사다리 확인
     for (let level = 0; level < structure.ladders.length; level++) {
       let newPosition = currentPosition;
       
-      // 현재 위치에서 가로선 확인 (현재 위치 기준으로 오른쪽으로 가는 사다리)
+      // 현재 위치에서 가로선 확인
       if (currentPosition < participantCount - 1 && structure.ladders[level][currentPosition]) {
         // 오른쪽으로 이동
+        path.push({ level: level, position: currentPosition + 1 });
+        await new Promise<void>(resolve => setTimeout(resolve, 250));
+        setAnimationPath([...path]);
         newPosition = currentPosition + 1;
       }
-      // 현재 위치에서 왼쪽으로 가는 사다리 확인 (왼쪽 위치의 사다리가 현재 위치로 오는지)
+      // 왼쪽에서 오는 사다리 확인
       else if (currentPosition > 0 && structure.ladders[level][currentPosition - 1]) {
         // 왼쪽으로 이동
+        path.push({ level: level, position: currentPosition - 1 });
+        await new Promise<void>(resolve => setTimeout(resolve, 250));
+        setAnimationPath([...path]);
         newPosition = currentPosition - 1;
       }
       
-      // 위치가 변경된 경우 (사다리 이동)
-      if (newPosition !== currentPosition) {
-        // 1단계: 가로 이동 표시
-        const horizontalStep = { level: level, position: newPosition };
-        const tempPath = [...path, horizontalStep];
-        setAnimationPath(tempPath);
-        await new Promise<void>(resolve => setTimeout(resolve, 250));
-        currentPosition = newPosition;
-      }
-      
-      // 2단계: 세로로 한 레벨 내려가기
-      path.push({ level: level + 1, position: currentPosition });
+      // 아래로 이동
+      path.push({ level: level + 1, position: newPosition });
       setAnimationPath([...path]);
       await new Promise<void>(resolve => setTimeout(resolve, 250));
+      currentPosition = newPosition;
     }
     
     const result = structure.outcomes[currentPosition];
@@ -179,40 +190,109 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
     setAnimationPath([]);
   };
 
+  // 클라이언트에서만 실행되도록 보장
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   // SVG 사다리 렌더링
   const renderLadder = () => {
+    // 클라이언트가 아니면 로딩 표시
+    if (!isClient) {
+      return (
+        <div className="relative bg-gradient-to-br from-zinc-900/90 to-zinc-800/90 backdrop-blur-xl p-4 sm:p-6 rounded-3xl shadow-2xl border border-white/10 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 to-amber-500/5 blur-3xl" />
+          <div className="flex items-center justify-center h-[300px] sm:h-[400px]">
+            <div className="text-center">
+              <RotateCw className="w-8 h-8 text-yellow-400 animate-spin mx-auto mb-3" />
+              <div className="text-yellow-400 text-lg font-bold">사다리 준비 중...</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     if (!ladderStructure) {
       generateLadderStructure();
       return null;
     }
 
     const structure = ladderStructure;
-    const width = 500;
-    const height = 400;
-    const startX = 60;
-    const endX = width - 60;
+    const width = Math.min(window.innerWidth - 32, 500); // 모바일 화면에서 여백 고려
+    const height = Math.min(window.innerHeight * 0.6, 400); // 화면 높이의 60%로 제한
+    const startX = Math.max(40, width * 0.12); // 최소 40px, 최대 화면 너비의 12%
+    const endX = width - startX;
     const spacing = (endX - startX) / (participantCount - 1);
     const levels = 8;
-    const levelSpacing = (height - 120) / levels;
+    const levelSpacing = (height - 100) / levels;
 
     return (
-      <div className="relative bg-gradient-to-br from-zinc-900/90 to-zinc-800/90 backdrop-blur-xl p-6 rounded-3xl shadow-2xl border border-white/10 overflow-hidden">
+      <div className="relative bg-gradient-to-br from-zinc-900/90 to-zinc-800/90 backdrop-blur-xl p-4 sm:p-6 rounded-3xl shadow-2xl border border-white/10 overflow-hidden mx-auto" style={{ maxWidth: 'fit-content' }}>
         {/* Background decoration */}
         <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 to-amber-500/5 blur-3xl" />
         
         <svg width={width} height={height} className="relative z-10">
           {/* 참가자 이름 */}
           {participants.map((participant, i) => (
-            <text
-              key={`name-${i}`}
-              x={startX + i * spacing}
-              y={25}
-              textAnchor="middle"
-              className="fill-yellow-400 text-sm font-bold"
-              style={{ fontFamily: 'Pretendard, sans-serif' }}
-            >
-              {participant.name}
-            </text>
+            <g key={`name-${i}`}>
+              {isEditingNames ? (
+                <foreignObject
+                  x={startX + i * spacing - Math.min(40, spacing * 0.4)}
+                  y={5}
+                  width={Math.min(80, spacing * 0.8)}
+                  height="50"
+                >
+                  <div className="flex flex-col items-center gap-1">
+                    <input
+                      type="text"
+                      value={participant.name}
+                      onChange={(e) => updateParticipantName(participant.id, e.target.value)}
+                      className="w-full px-1 py-0.5 text-center bg-zinc-800/50 border border-yellow-400/30 rounded text-yellow-400 text-[10px] sm:text-sm focus:outline-none focus:border-yellow-400"
+                      style={{ fontFamily: 'Pretendard, sans-serif' }}
+                    />
+                    <button
+                      onClick={() => setIsEditingNames(false)}
+                      className="px-1.5 sm:px-2 py-0.5 rounded text-[8px] sm:text-[10px] font-medium bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 transition-all"
+                    >
+                      완료
+                    </button>
+                  </div>
+                </foreignObject>
+              ) : (
+                <foreignObject
+                  x={startX + i * spacing - Math.min(50, spacing * 0.5)}
+                  y={5}
+                  width={Math.min(100, spacing)}
+                  height="50"
+                >
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="flex items-center gap-1 group cursor-pointer" onClick={() => !isPlaying && setIsEditingNames(true)}>
+                      <span className="text-yellow-400 text-[10px] sm:text-sm font-bold group-hover:text-yellow-300 truncate max-w-[60px] sm:max-w-[80px] text-center">
+                        {participant.name}
+                      </span>
+                      <Edit3 className={`w-2 h-2 sm:w-3 sm:h-3 text-yellow-400/0 group-hover:text-yellow-400/50 transition-all ${isPlaying ? 'cursor-not-allowed opacity-50' : ''}`} />
+                    </div>
+                    <button
+                      onClick={() => !isPlaying && !participant.hasPlayed && startIndividualGame(i)}
+                      disabled={isPlaying || participant.hasPlayed}
+                      className={`px-1.5 sm:px-2 py-0.5 rounded text-[8px] sm:text-[10px] font-medium transition-all ${
+                        participant.hasPlayed
+                          ? participant.isWin
+                            ? 'bg-green-500/20 text-green-400'
+                            : 'bg-red-500/20 text-red-400'
+                          : 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30'
+                      } disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
+                    >
+                      {participant.hasPlayed
+                        ? participant.isWin
+                          ? '당첨!'
+                          : '꽝...'
+                        : '시작'}
+                    </button>
+                  </div>
+                </foreignObject>
+              )}
+            </g>
           ))}
 
           {/* 결과 */}
@@ -222,7 +302,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
               x={startX + i * spacing}
               y={height - 15}
               textAnchor="middle"
-              className={`text-sm font-bold ${outcome === '당첨' ? 'fill-green-400' : 'fill-red-400'}`}
+              className={`text-[10px] sm:text-sm font-bold ${outcome === '당첨' ? 'fill-green-400' : 'fill-red-400'}`}
               style={{ fontFamily: 'Pretendard, sans-serif' }}
             >
               {outcome}
@@ -283,8 +363,8 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
                 const nextX = startX + nextPoint.position * spacing;
                 const nextY = 70 + nextPoint.level * levelSpacing;
 
-                if (point.position === nextPoint.position) {
-                  // 세로 이동
+                if (point.level === nextPoint.level) {
+                  // 가로 이동
                   return (
                     <line
                       key={`path-${i}`}
@@ -302,53 +382,25 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
                     />
                   );
                 } else {
-                  // 가로 + 세로 이동
+                  // 세로 이동
                   return (
-                    <g key={`path-${i}`}>
-                      <line
-                        x1={currentX}
-                        y1={currentY}
-                        x2={nextX}
-                        y2={currentY}
-                        stroke="#ef4444"
-                        strokeWidth="6"
-                        strokeLinecap="round"
-                        className="animate-pulse"
-                        style={{
-                          filter: 'drop-shadow(0 0 10px rgba(239, 68, 68, 0.8))'
-                        }}
-                      />
-                      <line
-                        x1={nextX}
-                        y1={currentY}
-                        x2={nextX}
-                        y2={nextY}
-                        stroke="#ef4444"
-                        strokeWidth="6"
-                        strokeLinecap="round"
-                        className="animate-pulse"
-                        style={{
-                          filter: 'drop-shadow(0 0 10px rgba(239, 68, 68, 0.8))'
-                        }}
-                      />
-                    </g>
+                    <line
+                      key={`path-${i}`}
+                      x1={currentX}
+                      y1={currentY}
+                      x2={nextX}
+                      y2={nextY}
+                      stroke="#ef4444"
+                      strokeWidth="6"
+                      strokeLinecap="round"
+                      className="animate-pulse"
+                      style={{
+                        filter: 'drop-shadow(0 0 10px rgba(239, 68, 68, 0.8))'
+                      }}
+                    />
                   );
                 }
               })}
-              
-              {/* 현재 위치 표시 */}
-              {animationPath.length > 0 && (
-                <circle
-                  cx={startX + animationPath[animationPath.length - 1].position * spacing}
-                  cy={70 + animationPath[animationPath.length - 1].level * levelSpacing}
-                  r="8"
-                  fill="#ef4444"
-                  className="animate-ping"
-                  style={{
-                    filter: 'drop-shadow(0 0 15px rgba(239, 68, 68, 1))'
-                  }}
-                />
-              )}
             </g>
           )}
         </svg>
@@ -382,113 +434,77 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
           사다리 타기
         </h1>
         <p className="text-lg text-white/80">
-          두근두근 스릴 넘치는 사다리 게임! 🎯
+          두근두근!
         </p>
       </div>
 
       {/* Settings */}
-      <div className="mb-6 space-y-4">
+      <div className="mb-6 grid grid-cols-3 gap-2 sm:gap-4 px-4">
         {/* Participants */}
-        <div className="flex justify-between items-center p-4 bg-zinc-900/60 backdrop-blur-xl rounded-2xl border border-white/10">
-          <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-yellow-400" />
-            <span className="text-white text-sm font-medium">참가자</span>
+        <div className="flex flex-col p-3 sm:p-4 bg-zinc-900/60 backdrop-blur-xl rounded-2xl border border-white/10">
+          <div className="flex items-center gap-1 sm:gap-2 mb-2 sm:mb-3">
+            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
+            <span className="text-white text-xs sm:text-sm font-medium">참가자</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center justify-center gap-2">
             <button
               onClick={() => updateParticipantCount(participantCount - 1)}
               disabled={participantCount <= 2 || isPlaying}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
+              className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
             >
-              <Minus className="w-4 h-4" />
+              <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
             </button>
-            <span className="text-yellow-400 text-lg font-bold min-w-[60px] text-center">
+            <span className="text-yellow-400 text-base sm:text-lg font-bold min-w-[40px] sm:min-w-[60px] text-center">
               {participantCount}명
             </span>
             <button
               onClick={() => updateParticipantCount(participantCount + 1)}
               disabled={participantCount >= 10 || isPlaying}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
+              className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
             </button>
           </div>
         </div>
 
         {/* Win Count */}
-        <div className="flex justify-between items-center p-4 bg-zinc-900/60 backdrop-blur-xl rounded-2xl border border-white/10">
-          <div className="flex items-center gap-2">
-            <Gift className="w-5 h-5 text-green-400" />
-            <span className="text-white text-sm font-medium">당첨</span>
+        <div className="flex flex-col p-3 sm:p-4 bg-zinc-900/60 backdrop-blur-xl rounded-2xl border border-white/10">
+          <div className="flex items-center gap-1 sm:gap-2 mb-2 sm:mb-3">
+            <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />
+            <span className="text-white text-xs sm:text-sm font-medium">당첨</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center justify-center gap-2">
             <button
               onClick={() => updateWinCount(winCount - 1)}
               disabled={winCount <= 0 || isPlaying}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
+              className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
             >
-              <Minus className="w-4 h-4" />
+              <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
             </button>
-            <span className="text-green-400 text-lg font-bold min-w-[60px] text-center">
+            <span className="text-green-400 text-base sm:text-lg font-bold min-w-[40px] sm:min-w-[60px] text-center">
               {winCount}개
             </span>
             <button
               onClick={() => updateWinCount(winCount + 1)}
               disabled={winCount >= participantCount - 1 || isPlaying}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
+              className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
             </button>
           </div>
         </div>
 
         {/* Lose Count */}
-        <div className="flex justify-between items-center p-4 bg-zinc-900/60 backdrop-blur-xl rounded-2xl border border-white/10">
-          <div className="flex items-center gap-2">
-            <X className="w-5 h-5 text-red-400" />
-            <span className="text-white text-sm font-medium">꽝</span>
+        <div className="flex flex-col p-3 sm:p-4 bg-zinc-900/60 backdrop-blur-xl rounded-2xl border border-white/10">
+          <div className="flex items-center gap-1 sm:gap-2 mb-2 sm:mb-3">
+            <X className="w-4 h-4 sm:w-5 sm:h-5 text-red-400" />
+            <span className="text-white text-xs sm:text-sm font-medium">꽝</span>
           </div>
-          <span className="text-red-400 text-lg font-bold">
-            {loseCount}개
-          </span>
-        </div>
-      </div>
-
-      {/* Participant Names */}
-      <div className="mb-6 bg-zinc-900/80 backdrop-blur-xl p-4 rounded-2xl border border-white/10">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="text-white text-sm font-semibold">참가자 이름</h3>
-          <button
-            onClick={() => setIsEditingNames(!isEditingNames)}
-            disabled={isPlaying}
-            className="text-yellow-400 hover:text-yellow-300 disabled:opacity-50 transition-all duration-200 hover:scale-110"
-          >
-            <Edit3 className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          {participants.map((participant) => (
-            <div key={participant.id} className="flex items-center gap-2">
-              {isEditingNames ? (
-                <input
-                  type="text"
-                  value={participant.name}
-                  onChange={(e) => updateParticipantName(participant.id, e.target.value)}
-                  className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all duration-200"
-                  placeholder={`참가자${participant.id}`}
-                />
-              ) : (
-                <span className="flex-1 text-white text-sm font-medium px-3 py-2">{participant.name}</span>
-              )}
-              {participant.hasPlayed && (
-                <span className={`text-xs px-2 py-1 rounded-full font-bold ${
-                  participant.isWin ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                }`}>
-                  {participant.result}
-                </span>
-              )}
-            </div>
-          ))}
+          <div className="flex items-center justify-center">
+            <span className="text-red-400 text-base sm:text-lg font-bold min-w-[40px] sm:min-w-[60px] text-center">
+              {loseCount}개
+            </span>
+          </div>
         </div>
       </div>
 
@@ -496,61 +512,14 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
       {renderLadder()}
 
       {/* Individual Play Buttons */}
-      <div className="mb-6 space-y-3">
-        <h3 className="text-white text-lg font-bold text-center mb-4">개별 사다리타기</h3>
-        <div className="grid grid-cols-2 gap-3">
-          {participants.map((participant, participantIndex) => (
-            <button
-              key={participant.id}
-              onClick={() => startIndividualGame(participantIndex)}
-              disabled={isPlaying || participant.hasPlayed}
-              className={`
-                flex items-center justify-center gap-2 p-4 rounded-xl font-medium transition-all duration-200 transform hover:scale-105 active:scale-95
-                ${participant.hasPlayed
-                  ? participant.isWin
-                    ? 'bg-green-500/20 text-green-400 border border-green-500/30 shadow-lg shadow-green-500/10'
-                    : 'bg-red-500/20 text-red-400 border border-red-500/30 shadow-lg shadow-red-500/10'
-                  : isPlaying
-                    ? 'bg-zinc-600/50 text-white/50 cursor-not-allowed border border-zinc-600/30'
-                    : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 hover:bg-yellow-500/30 shadow-lg shadow-yellow-500/10'
-                }
-              `}
-            >
-              {participant.hasPlayed ? (
-                <UserCheck className="w-4 h-4" />
-              ) : (
-                <Play className="w-4 h-4" />
-              )}
-              <span className="font-bold">{participant.name}</span>
-              {participant.hasPlayed && (
-                <span className="text-xs opacity-80">({participant.result})</span>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Reset Button */}
-      <div className="text-center">
+      <div className="mt-6 flex justify-center">
         <button
           onClick={resetGame}
-          disabled={isPlaying}
-          className={`
-            relative group w-48 h-12 rounded-full font-bold text-sm
-            transition-all duration-300 transform active:scale-95 hover:scale-105
-            text-black
-            focus:outline-none focus:ring-4 focus:ring-yellow-300/50
-            ${isPlaying 
-              ? 'bg-zinc-600 cursor-not-allowed text-white' 
-              : 'bg-gradient-to-br from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 shadow-lg shadow-yellow-500/25'
-            }
-          `}
+          disabled={isPlaying || !participants.some(p => p.hasPlayed)}
+          className="px-4 py-2 rounded-lg bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 text-sm font-medium"
         >
-          <span className="absolute top-0.5 left-0.5 w-[calc(100%-4px)] h-[calc(100%-4px)] bg-yellow-400/20 rounded-full group-hover:bg-yellow-400/30 transition-colors"></span>
-          <span className="relative flex items-center justify-center gap-2">
-            <RotateCw className="w-4 h-4" />
-            다시 시작
-          </span>
+          <RotateCw className="w-4 h-4" />
+          다시하기
         </button>
       </div>
     </div>
