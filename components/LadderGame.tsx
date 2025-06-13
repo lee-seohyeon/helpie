@@ -168,7 +168,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
       }
     }
 
-    // 경로 하이라이트
+    // 경로 하이라이트 (실제 사다리 타는 모양으로)
     if (highlightPath) {
       ctx.strokeStyle = '#ff6b6b';
       ctx.lineWidth = 6;
@@ -183,10 +183,27 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
         const nextX = startX + next.position * spacing;
         const nextY = 70 + next.level * levelSpacing;
         
-        ctx.beginPath();
-        ctx.moveTo(currentX, currentY);
-        ctx.lineTo(nextX, nextY);
-        ctx.stroke();
+        // 위치가 같으면 세로선 (직진)
+        if (current.position === next.position) {
+          ctx.beginPath();
+          ctx.moveTo(currentX, currentY);
+          ctx.lineTo(nextX, nextY);
+          ctx.stroke();
+        } 
+        // 위치가 다르면 가로선 + 세로선 (사다리 이동)
+        else {
+          // 먼저 가로선으로 이동
+          ctx.beginPath();
+          ctx.moveTo(currentX, currentY);
+          ctx.lineTo(nextX, currentY);
+          ctx.stroke();
+          
+          // 그다음 세로선으로 내려가기
+          ctx.beginPath();
+          ctx.moveTo(nextX, currentY);
+          ctx.lineTo(nextX, nextY);
+          ctx.stroke();
+        }
       }
     }
   }, [participantCount, participants, generateLadderStructure]);
@@ -198,17 +215,36 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
     let currentPosition = participantIndex;
     const path: { level: number; position: number }[] = [{ level: 0, position: currentPosition }];
     
-    // 각 레벨을 내려가면서 사다리 확인
+    // 각 레벨을 내려가면서 사다리 확인 (정확한 알고리즘)
     for (let level = 0; level < structure.ladders.length; level++) {
-      // 왼쪽 사다리 확인
-      if (currentPosition > 0 && structure.ladders[level][currentPosition - 1]) {
-        currentPosition--;
+      let newPosition = currentPosition;
+      
+      // 현재 위치에서 가로선 확인 (현재 위치 기준으로 오른쪽으로 가는 사다리)
+      if (currentPosition < participantCount - 1 && structure.ladders[level][currentPosition]) {
+        // 오른쪽으로 이동
+        newPosition = currentPosition + 1;
       }
-      // 오른쪽 사다리 확인
-      else if (currentPosition < participantCount - 1 && structure.ladders[level][currentPosition]) {
-        currentPosition++;
+      // 현재 위치에서 왼쪽으로 가는 사다리 확인 (왼쪽 위치의 사다리가 현재 위치로 오는지)
+      else if (currentPosition > 0 && structure.ladders[level][currentPosition - 1]) {
+        // 왼쪽으로 이동
+        newPosition = currentPosition - 1;
       }
       
+      // 위치가 변경된 경우 (사다리 이동)
+      if (newPosition !== currentPosition) {
+        // 1단계: 가로 이동 표시
+        const horizontalStep = { level: level, position: newPosition };
+        const tempPath = [...path, horizontalStep];
+        await new Promise<void>(resolve => {
+          setTimeout(() => {
+            drawLadder(tempPath);
+            resolve();
+          }, 250);
+        });
+        currentPosition = newPosition;
+      }
+      
+      // 2단계: 세로로 한 레벨 내려가기
       path.push({ level: level + 1, position: currentPosition });
       
       // 애니메이션으로 경로 그리기
@@ -216,7 +252,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
         setTimeout(() => {
           drawLadder(path);
           resolve();
-        }, 300);
+        }, 250);
       });
     }
     
