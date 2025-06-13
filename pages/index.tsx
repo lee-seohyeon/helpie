@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import DiceGame from '@/components/DiceGame';
 import NumberPicker from '@/components/NumberPicker';
@@ -8,6 +8,20 @@ import { Dice1, Hash, GitBranch, Smile } from 'lucide-react';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'dice' | 'numbers' | 'ladder' | 'emoji'>('dice');
+
+  // 컴포넌트 마운트 시 localStorage에서 탭 상태 복원
+  useEffect(() => {
+    const savedTab = localStorage.getItem('activeTab') as 'dice' | 'numbers' | 'ladder' | 'emoji';
+    if (savedTab && ['dice', 'numbers', 'ladder', 'emoji'].includes(savedTab)) {
+      setActiveTab(savedTab);
+    }
+  }, []);
+
+  // 탭 변경 시 localStorage에 저장
+  const handleTabChange = (tab: 'dice' | 'numbers' | 'ladder' | 'emoji') => {
+    setActiveTab(tab);
+    localStorage.setItem('activeTab', tab);
+  };
 
   return (
     <>
@@ -29,7 +43,7 @@ export default function Home() {
             <div className="bg-zinc-900/80 backdrop-blur-xl p-1.5 rounded-2xl border border-white/10 shadow-xl">
               <div className="flex gap-2">
                 <button
-                  onClick={() => setActiveTab('dice')}
+                  onClick={() => handleTabChange('dice')}
                   className={`
                     flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all duration-200
                     ${activeTab === 'dice'
@@ -39,10 +53,10 @@ export default function Home() {
                   `}
                 >
                   <Dice1 className="w-5 h-5" />
-                  주사위
+                  <span className="hidden sm:inline">주사위</span>
                 </button>
                 <button
-                  onClick={() => setActiveTab('numbers')}
+                  onClick={() => handleTabChange('numbers')}
                   className={`
                     flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all duration-200
                     ${activeTab === 'numbers'
@@ -52,10 +66,10 @@ export default function Home() {
                   `}
                 >
                   <Hash className="w-5 h-5" />
-                  랜덤 숫자
+                  <span className="hidden sm:inline">랜덤 숫자</span>
                 </button>
                 <button
-                  onClick={() => setActiveTab('ladder')}
+                  onClick={() => handleTabChange('ladder')}
                   className={`
                     flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all duration-200
                     ${activeTab === 'ladder'
@@ -65,10 +79,10 @@ export default function Home() {
                   `}
                 >
                   <GitBranch className="w-5 h-5" />
-                  사다리 타기
+                  <span className="hidden sm:inline">사다리 타기</span>
                 </button>
                 <button
-                  onClick={() => setActiveTab('emoji')}
+                  onClick={() => handleTabChange('emoji')}
                   className={`
                     flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all duration-200
                     ${activeTab === 'emoji'
@@ -78,7 +92,7 @@ export default function Home() {
                   `}
                 >
                   <Smile className="w-5 h-5" />
-                  이모지
+                  <span className="hidden sm:inline">이모지</span>
                 </button>
               </div>
             </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 interface EmojiPickerProps {
   className?: string;
@@ -47,6 +47,10 @@ const EmojiPicker: React.FC<EmojiPickerProps> = ({ className }) => {
     }
   };
 
+  const handleCategoryClick = (categoryName: string) => {
+    setActiveCategory(categoryName);
+  };
+
   return (
     <div className={className}>
       {/* Header */}
@@ -63,20 +67,39 @@ const EmojiPicker: React.FC<EmojiPickerProps> = ({ className }) => {
       </div>
 
       {/* Category Tabs */}
-      <div className="mb-6 w-full">
-        <div className="overflow-x-auto">
-          <div className="flex gap-3 px-4 pb-2">
-            {emojiCategories.map((category) => (
+      <div className="mb-6">
+        <div className="px-4">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+            {emojiCategories.map((category, index) => (
               <button
-                key={category.name}
-                onClick={() => setActiveCategory(category.name)}
+                key={`category-${index}`}
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                }}
+                onMouseUp={(e) => {
+                  e.preventDefault();
+                  handleCategoryClick(category.name);
+                }}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  handleCategoryClick(category.name);
+                }}
                 className={`
-                  px-6 py-3 rounded-xl font-medium transition-all duration-200 text-base whitespace-nowrap
+                  w-full h-12 rounded-lg font-medium text-sm transition-all duration-200
                   ${activeCategory === category.name
-                    ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-black shadow-lg scale-105'
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                    ? 'bg-yellow-400 text-black'
+                    : 'bg-zinc-800 text-white hover:bg-zinc-700'
                   }
                 `}
+                style={{
+                  zIndex: 10,
+                  position: 'relative',
+                  pointerEvents: 'auto'
+                }}
               >
                 {category.name}
               </button>

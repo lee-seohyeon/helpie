@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Plus, Minus, Play, Users, Gift, X, Edit3, UserCheck, RotateCw } from 'lucide-react';
+import { Plus, Minus, Users, Gift, X, Edit3, RotateCw } from 'lucide-react';
 
 interface LadderGameProps {
   className?: string;
@@ -227,11 +227,11 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
     const levelSpacing = (height - 100) / levels;
 
     return (
-      <div className="relative bg-gradient-to-br from-zinc-900/90 to-zinc-800/90 backdrop-blur-xl p-4 sm:p-6 rounded-3xl shadow-2xl border border-white/10 overflow-hidden mx-auto" style={{ maxWidth: 'fit-content' }}>
+      <div className="relative bg-gradient-to-br from-zinc-900/90 to-zinc-800/90 backdrop-blur-xl p-4 sm:p-6 rounded-3xl shadow-2xl border border-white/10 overflow-hidden">
         {/* Background decoration */}
         <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 to-amber-500/5 blur-3xl" />
         
-        <svg width={width} height={height} className="relative z-10">
+        <svg width={width} height={height} className="relative z-10 mx-auto">
           {/* 참가자 이름 */}
           {participants.map((participant, i) => (
             <g key={`name-${i}`}>
@@ -441,26 +441,26 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
       {/* Settings */}
       <div className="mb-6 grid grid-cols-3 gap-2 sm:gap-4 px-4">
         {/* Participants */}
-        <div className="flex flex-col p-3 sm:p-4 bg-zinc-900/60 backdrop-blur-xl rounded-2xl border border-white/10">
+        <div className="flex flex-col p-2 sm:p-4 bg-zinc-900/60 backdrop-blur-xl rounded-2xl border border-white/10">
           <div className="flex items-center gap-1 sm:gap-2 mb-2 sm:mb-3">
             <Users className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
             <span className="text-white text-xs sm:text-sm font-medium">참가자</span>
           </div>
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-1 sm:gap-2">
             <button
               onClick={() => updateParticipantCount(participantCount - 1)}
               disabled={participantCount <= 2 || isPlaying}
-              className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 flex-shrink-0"
             >
               <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
             </button>
-            <span className="text-yellow-400 text-base sm:text-lg font-bold min-w-[40px] sm:min-w-[60px] text-center">
+            <span className="text-yellow-400 text-sm sm:text-lg font-bold min-w-[30px] sm:min-w-[60px] text-center">
               {participantCount}명
             </span>
             <button
               onClick={() => updateParticipantCount(participantCount + 1)}
               disabled={participantCount >= 10 || isPlaying}
-              className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 flex-shrink-0"
             >
               <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
             </button>
@@ -468,26 +468,26 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
         </div>
 
         {/* Win Count */}
-        <div className="flex flex-col p-3 sm:p-4 bg-zinc-900/60 backdrop-blur-xl rounded-2xl border border-white/10">
+        <div className="flex flex-col p-2 sm:p-4 bg-zinc-900/60 backdrop-blur-xl rounded-2xl border border-white/10">
           <div className="flex items-center gap-1 sm:gap-2 mb-2 sm:mb-3">
             <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />
             <span className="text-white text-xs sm:text-sm font-medium">당첨</span>
           </div>
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-1 sm:gap-2">
             <button
               onClick={() => updateWinCount(winCount - 1)}
               disabled={winCount <= 0 || isPlaying}
-              className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 flex-shrink-0"
             >
               <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
             </button>
-            <span className="text-green-400 text-base sm:text-lg font-bold min-w-[40px] sm:min-w-[60px] text-center">
+            <span className="text-green-400 text-sm sm:text-lg font-bold min-w-[30px] sm:min-w-[60px] text-center">
               {winCount}개
             </span>
             <button
               onClick={() => updateWinCount(winCount + 1)}
               disabled={winCount >= participantCount - 1 || isPlaying}
-              className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 flex-shrink-0"
             >
               <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
             </button>
@@ -495,13 +495,13 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
         </div>
 
         {/* Lose Count */}
-        <div className="flex flex-col p-3 sm:p-4 bg-zinc-900/60 backdrop-blur-xl rounded-2xl border border-white/10">
+        <div className="flex flex-col p-2 sm:p-4 bg-zinc-900/60 backdrop-blur-xl rounded-2xl border border-white/10">
           <div className="flex items-center gap-1 sm:gap-2 mb-2 sm:mb-3">
             <X className="w-4 h-4 sm:w-5 sm:h-5 text-red-400" />
             <span className="text-white text-xs sm:text-sm font-medium">꽝</span>
           </div>
           <div className="flex items-center justify-center">
-            <span className="text-red-400 text-base sm:text-lg font-bold min-w-[40px] sm:min-w-[60px] text-center">
+            <span className="text-red-400 text-sm sm:text-lg font-bold min-w-[30px] sm:min-w-[60px] text-center">
               {loseCount}개
             </span>
           </div>
@@ -509,7 +509,9 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
       </div>
 
       {/* Ladder Display */}
-      {renderLadder()}
+      <div className="px-4">
+        {renderLadder()}
+      </div>
 
       {/* Individual Play Buttons */}
       <div className="mt-6 flex justify-center">
