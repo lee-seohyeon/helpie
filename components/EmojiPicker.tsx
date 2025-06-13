@@ -63,23 +63,25 @@ const EmojiPicker: React.FC<EmojiPickerProps> = ({ className }) => {
       </div>
 
       {/* Category Tabs */}
-      <div className="mb-6 overflow-x-auto">
-        <div className="flex gap-2 px-4 min-w-max">
-          {emojiCategories.map((category) => (
-            <button
-              key={category.name}
-              onClick={() => setActiveCategory(category.name)}
-              className={`
-                px-4 py-2 rounded-xl font-medium transition-all duration-200
-                ${activeCategory === category.name
-                  ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-black shadow-lg'
-                  : 'text-white/70 hover:text-white hover:bg-white/10'
-                }
-              `}
-            >
-              {category.name}
-            </button>
-          ))}
+      <div className="mb-6 w-full">
+        <div className="overflow-x-auto">
+          <div className="flex gap-3 px-4 pb-2">
+            {emojiCategories.map((category) => (
+              <button
+                key={category.name}
+                onClick={() => setActiveCategory(category.name)}
+                className={`
+                  px-6 py-3 rounded-xl font-medium transition-all duration-200 text-base whitespace-nowrap
+                  ${activeCategory === category.name
+                    ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-black shadow-lg scale-105'
+                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                  }
+                `}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
