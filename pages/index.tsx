@@ -3,10 +3,11 @@ import Head from 'next/head';
 import DiceGame from '@/components/DiceGame';
 import NumberPicker from '@/components/NumberPicker';
 import LadderGame from '@/components/LadderGame';
-import { Dice1, Hash, GitBranch } from 'lucide-react';
+import EmojiPicker from '@/components/EmojiPicker';
+import { Dice1, Hash, GitBranch, Smile } from 'lucide-react';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'dice' | 'numbers' | 'ladder'>('dice');
+  const [activeTab, setActiveTab] = useState<'dice' | 'numbers' | 'ladder' | 'emoji'>('dice');
 
   return (
     <>
@@ -64,29 +65,32 @@ export default function Home() {
                   `}
                 >
                   <GitBranch className="w-5 h-5" />
-                  사다리타기
+                  사다리 타기
+                </button>
+                <button
+                  onClick={() => setActiveTab('emoji')}
+                  className={`
+                    flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all duration-200
+                    ${activeTab === 'emoji'
+                      ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-black shadow-lg'
+                      : 'text-white/70 hover:text-white hover:bg-white/10'
+                    }
+                  `}
+                >
+                  <Smile className="w-5 h-5" />
+                  이모지
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Content Area */}
-        <div className="relative flex items-center justify-center min-h-[calc(100vh-80px)]">
-          <div className="relative w-full max-w-2xl mx-auto px-4 py-8 sm:px-6 sm:py-12">
-            {/* Tab Content */}
-            <div className="relative">
-              <div className={`transition-all duration-300 ${activeTab === 'dice' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 absolute inset-0 pointer-events-none'}`}>
-                <DiceGame />
-              </div>
-              <div className={`transition-all duration-300 ${activeTab === 'numbers' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 absolute inset-0 pointer-events-none'}`}>
-                <NumberPicker />
-              </div>
-              <div className={`transition-all duration-300 ${activeTab === 'ladder' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 absolute inset-0 pointer-events-none'}`}>
-                <LadderGame />
-              </div>
-            </div>
-          </div>
+        {/* Content */}
+        <div className="container mx-auto px-4 py-8">
+          {activeTab === 'dice' && <DiceGame className="max-w-2xl mx-auto" />}
+          {activeTab === 'numbers' && <NumberPicker className="max-w-2xl mx-auto" />}
+          {activeTab === 'ladder' && <LadderGame className="max-w-4xl mx-auto" />}
+          {activeTab === 'emoji' && <EmojiPicker className="max-w-4xl mx-auto" />}
         </div>
       </main>
     </>
