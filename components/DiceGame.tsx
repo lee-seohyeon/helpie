@@ -7,35 +7,43 @@ interface DiceGameProps {
 }
 
 const DiceGame: React.FC<DiceGameProps> = ({ className }) => {
-  const [diceCount, setDiceCount] = useState(3);
-  const [diceValues, setDiceValues] = useState<number[]>(Array(diceCount).fill(1));
+  const [diceValues, setDiceValues] = useState<number[]>(Array(3).fill(1));
   const [isRolling, setIsRolling] = useState(false);
 
   const rollDice = () => {
     if (isRolling) return;
     
     setIsRolling(true);
-    setDiceValues([]);
+    const currentDiceCount = diceValues.length;
 
     // 애니메이션을 위한 임시 주사위 값들 생성
     const rollInterval = setInterval(() => {
-      const tempValues = Array(diceCount).fill(0).map(() => Math.floor(Math.random() * 6) + 1);
+      const tempValues = Array(currentDiceCount).fill(0).map(() => Math.floor(Math.random() * 6) + 1);
       setDiceValues(tempValues);
     }, 50);
 
     // 최종 주사위 값 생성
     setTimeout(() => {
       clearInterval(rollInterval);
-      const finalValues = Array(diceCount).fill(0).map(() => Math.floor(Math.random() * 6) + 1);
+      const finalValues = Array(currentDiceCount).fill(0).map(() => Math.floor(Math.random() * 6) + 1);
       setDiceValues(finalValues);
       setIsRolling(false);
     }, 1000);
   };
 
-  const updateDiceCount = (newCount: number) => {
-    if (newCount >= 1 && newCount <= 10 && !isRolling) {
-      setDiceCount(newCount);
-      setDiceValues(Array(newCount).fill(1));
+  const increaseDiceCount = () => {
+    if (isRolling) return;
+    const currentCount = diceValues.length;
+    if (currentCount < 10) {
+      setDiceValues(Array(currentCount + 1).fill(1));
+    }
+  };
+
+  const decreaseDiceCount = () => {
+    if (isRolling) return;
+    const currentCount = diceValues.length;
+    if (currentCount > 1) {
+      setDiceValues(Array(currentCount - 1).fill(1));
     }
   };
 
@@ -57,19 +65,19 @@ const DiceGame: React.FC<DiceGameProps> = ({ className }) => {
       {/* Dice Count Controls */}
       <div className="mb-6 flex justify-center items-center gap-4">
         <button
-          onClick={() => updateDiceCount(diceCount - 1)}
-          disabled={diceCount <= 1 || isRolling}
-          className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={decreaseDiceCount}
+          disabled={diceValues.length <= 1 || isRolling}
+          className="relative z-10 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <Minus className="w-4 h-4" />
         </button>
         <div className="text-yellow-400 text-lg font-semibold">
-          주사위 {diceCount}개
+          주사위 {diceValues.length}개
         </div>
         <button
-          onClick={() => updateDiceCount(diceCount + 1)}
-          disabled={diceCount >= 10 || isRolling}
-          className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={increaseDiceCount}
+          disabled={diceValues.length >= 10 || isRolling}
+          className="relative z-10 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <Plus className="w-4 h-4" />
         </button>

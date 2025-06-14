@@ -40,8 +40,19 @@ const NumberPicker: React.FC<NumberPickerProps> = ({ className }) => {
     }, 1000);
   };
 
-  const updateCount = (newCount: number) => {
-    if (newCount >= 1 && newCount <= 10 && !isGenerating) {
+  const increaseCount = () => {
+    if (isGenerating) return;
+    const newCount = count + 1;
+    if (newCount <= 10 && newCount <= (maxNumber - minNumber + 1)) {
+      setCount(newCount);
+      setNumbers([]);
+    }
+  };
+
+  const decreaseCount = () => {
+    if (isGenerating) return;
+    const newCount = count - 1;
+    if (newCount >= 1) {
       setCount(newCount);
       setNumbers([]);
     }
@@ -89,9 +100,9 @@ const NumberPicker: React.FC<NumberPickerProps> = ({ className }) => {
       {/* Number Count Selector */}
       <div className="mb-6 flex justify-center items-center gap-4">
         <button
-          onClick={() => updateCount(count - 1)}
+          onClick={decreaseCount}
           disabled={count <= 1 || isGenerating}
-          className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          className="relative z-10 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <Minus className="w-4 h-4" />
         </button>
@@ -99,9 +110,9 @@ const NumberPicker: React.FC<NumberPickerProps> = ({ className }) => {
           {count}개 뽑기
         </div>
         <button
-          onClick={() => updateCount(count + 1)}
+          onClick={increaseCount}
           disabled={count >= 10 || isGenerating || count >= (maxNumber - minNumber + 1)}
-          className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          className="relative z-10 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <Plus className="w-4 h-4" />
         </button>

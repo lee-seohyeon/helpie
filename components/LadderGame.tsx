@@ -218,28 +218,46 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
     }
 
     const structure = ladderStructure;
-    const width = Math.min(window.innerWidth - 32, 500); // 모바일 화면에서 여백 고려
-    const height = Math.min(window.innerHeight * 0.6, 400); // 화면 높이의 60%로 제한
-    const startX = Math.max(40, width * 0.12); // 최소 40px, 최대 화면 너비의 12%
-    const endX = width - startX;
-    const spacing = (endX - startX) / (participantCount - 1);
+    
+    // 모바일 친화적인 크기 계산
+    const isMobile = window.innerWidth < 640;
+    
+    // 참가자 수에 따른 최적 간격 계산
+    const minSpacing = isMobile ? 45 : 60; // 최소 간격 (더 넉넉하게)
+    const sideMargin = isMobile ? 30 : 50; // 좌우 여백 (더 넉넉하게)
+    
+    // 필요한 최소 너비 계산
+    const requiredWidth = (minSpacing * (participantCount - 1)) + (sideMargin * 2);
+    
+    // 실제 사용할 크기
+    const actualWidth = Math.max(requiredWidth, isMobile ? 320 : 500);
+    const spacing = (actualWidth - (sideMargin * 2)) / (participantCount - 1);
+    const startX = sideMargin;
+    
+    // 높이는 화면 크기에 따라 동적 조정
+    const maxHeight = isMobile ? Math.min(window.innerHeight * 0.5, 300) : 400;
+    const height = Math.max(250, maxHeight);
+    
     const levels = 8;
     const levelSpacing = (height - 100) / levels;
 
     return (
-      <div className="relative bg-gradient-to-br from-zinc-900/90 to-zinc-800/90 backdrop-blur-xl p-4 sm:p-6 rounded-3xl shadow-2xl border border-white/10 overflow-hidden">
+      <div className="relative bg-gradient-to-br from-zinc-900/90 to-zinc-800/90 backdrop-blur-xl p-2 sm:p-4 rounded-3xl shadow-2xl border border-white/10">
         {/* Background decoration */}
         <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 to-amber-500/5 blur-3xl" />
         
-        <svg width={width} height={height} className="relative z-10 mx-auto">
+        {/* 스크롤 가능한 컨테이너 */}
+        <div className="overflow-x-auto overflow-y-hidden pb-2">
+          <div style={{ width: actualWidth, margin: '0 auto' }}>
+            <svg width={actualWidth} height={height} className="relative z-10 block">
           {/* 참가자 이름 */}
           {participants.map((participant, i) => (
             <g key={`name-${i}`}>
               {isEditingNames ? (
                 <foreignObject
-                  x={startX + i * spacing - Math.min(40, spacing * 0.4)}
+                  x={startX + i * spacing - spacing * 0.5}
                   y={5}
-                  width={Math.min(80, spacing * 0.8)}
+                  width={spacing}
                   height="50"
                 >
                   <div className="flex flex-col items-center gap-1">
@@ -247,12 +265,13 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
                       type="text"
                       value={participant.name}
                       onChange={(e) => updateParticipantName(participant.id, e.target.value)}
-                      className="w-full px-1 py-0.5 text-center bg-zinc-800/50 border border-yellow-400/30 rounded text-yellow-400 text-[10px] sm:text-sm focus:outline-none focus:border-yellow-400"
-                      style={{ fontFamily: 'Pretendard, sans-serif' }}
+                      className="w-full px-1 py-0.5 text-center bg-zinc-800/50 border border-yellow-400/30 rounded text-yellow-400 focus:outline-none focus:border-yellow-400"
+                      style={{ fontFamily: 'Pretendard, sans-serif', fontSize: Math.min(10, Math.max(8, spacing * 0.18)) + 'px' }}
                     />
                     <button
                       onClick={() => setIsEditingNames(false)}
-                      className="px-1.5 sm:px-2 py-0.5 rounded text-[8px] sm:text-[10px] font-medium bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 transition-all"
+                      className="px-1 py-0.5 rounded font-medium bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 transition-all"
+                      style={{ fontSize: Math.min(8, Math.max(6, spacing * 0.12)) + 'px' }}
                     >
                       완료
                     </button>
@@ -260,29 +279,30 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
                 </foreignObject>
               ) : (
                 <foreignObject
-                  x={startX + i * spacing - Math.min(50, spacing * 0.5)}
+                  x={startX + i * spacing - spacing * 0.5}
                   y={5}
-                  width={Math.min(100, spacing)}
+                  width={spacing}
                   height="50"
                 >
                   <div className="flex flex-col items-center gap-1">
-                    <div className="flex items-center gap-1 group cursor-pointer" onClick={() => !isPlaying && setIsEditingNames(true)}>
-                      <span className="text-yellow-400 text-[10px] sm:text-sm font-bold group-hover:text-yellow-300 truncate max-w-[60px] sm:max-w-[80px] text-center">
+                    <div className="flex items-center justify-center gap-1 group cursor-pointer w-full" onClick={() => !isPlaying && setIsEditingNames(true)}>
+                      <span className="text-yellow-400 font-bold group-hover:text-yellow-300 text-center block" style={{ fontSize: Math.min(12, Math.max(8, spacing * 0.2)) + 'px', maxWidth: (spacing * 0.8) + 'px', wordBreak: 'break-all', lineHeight: '1.1' }}>
                         {participant.name}
                       </span>
-                      <Edit3 className={`w-2 h-2 sm:w-3 sm:h-3 text-yellow-400/0 group-hover:text-yellow-400/50 transition-all ${isPlaying ? 'cursor-not-allowed opacity-50' : ''}`} />
+                      <Edit3 className={`text-yellow-400/0 group-hover:text-yellow-400/50 transition-all flex-shrink-0 ${isPlaying ? 'cursor-not-allowed opacity-50' : ''}`} style={{ width: Math.min(10, spacing * 0.15) + 'px', height: Math.min(10, spacing * 0.15) + 'px' }} />
                     </div>
-                    <button
-                      onClick={() => !isPlaying && !participant.hasPlayed && startIndividualGame(i)}
-                      disabled={isPlaying || participant.hasPlayed}
-                      className={`px-1.5 sm:px-2 py-0.5 rounded text-[8px] sm:text-[10px] font-medium transition-all ${
-                        participant.hasPlayed
-                          ? participant.isWin
-                            ? 'bg-green-500/20 text-green-400'
-                            : 'bg-red-500/20 text-red-400'
-                          : 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30'
-                      } disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
-                    >
+                                          <button
+                        onClick={() => !isPlaying && !participant.hasPlayed && startIndividualGame(i)}
+                        disabled={isPlaying || participant.hasPlayed}
+                        className={`px-1 py-0.5 rounded font-medium transition-all ${
+                          participant.hasPlayed
+                            ? participant.isWin
+                              ? 'bg-green-500/20 text-green-400'
+                              : 'bg-red-500/20 text-red-400'
+                            : 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30'
+                        } disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
+                        style={{ fontSize: Math.min(10, Math.max(6, spacing * 0.15)) + 'px', padding: '2px ' + Math.min(6, spacing * 0.1) + 'px' }}
+                      >
                       {participant.hasPlayed
                         ? participant.isWin
                           ? '당첨!'
@@ -403,7 +423,9 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
               })}
             </g>
           )}
-        </svg>
+            </svg>
+          </div>
+        </div>
 
         {/* 플레이 중 오버레이 */}
         {isPlaying && currentPlayer !== null && (
@@ -509,7 +531,7 @@ const LadderGame: React.FC<LadderGameProps> = ({ className }) => {
       </div>
 
       {/* Ladder Display */}
-      <div className="px-4">
+      <div className="px-2 sm:px-4">
         {renderLadder()}
       </div>
 
